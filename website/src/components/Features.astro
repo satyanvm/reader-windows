@@ -1,0 +1,103 @@
+---
+const features = [
+  {
+    title: 'Your place, everywhere',
+    body: 'Close a book on your Mac and open it on your phone at the same line, even after restarts or time offline. If you read further elsewhere, Readserene offers to take you there and never jumps without asking.',
+    icon: '<path d="M7 4h10a1 1 0 0 1 1 1v15l-6-3.5L6 20V5a1 1 0 0 1 1-1Z"/><path d="M9.5 9.5h5"/>',
+  },
+  {
+    title: 'Your library follows you',
+    body: 'A book you add on one device appears on the others. Remove it once and it is gone everywhere.',
+    icon: '<rect x="3.5" y="4" width="4" height="16" rx="1"/><rect x="9.5" y="4" width="4" height="16" rx="1"/><path d="m16.2 5.2 3.8-1 4 15.5"/><path d="m16.2 5.2 3.9 15"/>',
+  },
+  {
+    title: 'Flowing text for PDFs',
+    body: 'Fixed PDF pages become text that reflows to your screen. Hyphenated words are rejoined, repeated headers and page numbers dropped, columns read in order and footnotes moved to the end. Scanned pages are read with on-device text recognition.',
+    icon: '<path d="M4 6h16"/><path d="M4 10h16"/><path d="M4 14h10"/><path d="M4 18h7"/><path d="m16 15 3 3-3 3"/><path d="M19 18h-3.5"/>',
+  },
+  {
+    title: 'A page at a time, or two',
+    body: 'Pages turn with a smooth slide by swipe, arrow keys or space, or you can scroll continuously. Show one page, or two side by side like an open book.',
+    icon: '<path d="M12 6.5C10 5 7.2 4.5 4 4.75v13.5c3.2-.25 6 .25 8 1.75 2-1.5 4.8-2 8-1.75V4.75C16.8 4.5 14 5 12 6.5Z"/><path d="M12 6.5V20"/>',
+  },
+  {
+    title: 'Original pages too',
+    body: 'Switch back to the PDF’s own pages whenever you like, with pinch to zoom. Both views come in four themes: White, Sepia, Dark and Black.',
+    icon: '<rect x="5" y="3.5" width="14" height="17" rx="1.5"/><circle cx="11" cy="11" r="3"/><path d="m13.2 13.2 2.8 2.8"/>',
+  },
+  {
+    title: 'Private by design',
+    body: 'Books are stored on your devices and text recognition happens on the device. Your account only syncs your library and reading positions. Sign in with email or Google.',
+    icon: '<path d="M12 3.5 5 6v5.5c0 4.3 2.9 7.6 7 9 4.1-1.4 7-4.7 7-9V6l-7-2.5Z"/><path d="m9 12 2.2 2.2L15.5 10"/>',
+  },
+];
+---
+
+<section id="features" class="section" aria-labelledby="features-title">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">Features</p>
+      <h2 id="features-title">Quiet tools that stay out of the way.</h2>
+    </div>
+    <ul class="grid">
+      {
+        features.map((f) => (
+          <li class="card reveal">
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+              set:html={f.icon}
+            />
+            <h3>{f.title}</h3>
+            <p>{f.body}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 40px 48px;
+  }
+
+  @media (min-width: 640px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 960px) {
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 56px 48px;
+    }
+  }
+
+  .card {
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+  }
+
+  svg {
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+
+  h3 {
+    margin-bottom: 8px;
+  }
+
+</style>

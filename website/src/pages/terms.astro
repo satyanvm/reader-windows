@@ -1,0 +1,59 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../site.config';
+---
+
+<Base title={`Terms · ${site.name}`} description={`The terms for using ${site.name}.`} path="/terms">
+  <div class="container section">
+    <article class="prose">
+      <h1>Terms</h1>
+      <p class="muted">Last updated: October 2026</p>
+      <p class="notice">
+        This is a plain-language template and has not been reviewed by a lawyer. Please review it before relying on
+        it.
+      </p>
+
+      <h2>Using {site.name}</h2>
+      <p>
+        {site.name} is an app for reading PDF and EPUB files. You can use the Free plan on one device, or subscribe
+        to {site.pricing.sync.name} to sync your library and reading positions across your devices.
+      </p>
+
+      <h2>Your books</h2>
+      <p>
+        Your books remain yours. Only add books you have the right to read and copy to your own devices. When you
+        sign in, you allow us to store your library files and reading positions for the sole purpose of syncing them
+        to your devices.
+      </p>
+
+      <h2>Your account</h2>
+      <p>
+        You can sign in with email or Google. Keep your sign-in details safe, and let us know if you think someone
+        else has used your account.
+      </p>
+
+      <h2>Subscriptions</h2>
+      <p>
+        {site.pricing.sync.name} is billed monthly or yearly. You can cancel anytime, and your subscription stays
+        active until the end of the period you have paid for. After that, you can keep reading with the Free plan.
+      </p>
+
+      <h2>No warranty</h2>
+      <p>
+        We work hard to keep {site.name} reliable, but it is provided “as is”. Please keep your own copies of your
+        books. To the extent the law allows, we are not liable for lost data or indirect damages.
+      </p>
+
+      <h2>Changes</h2>
+      <p>
+        If we change these terms, we will update this page and, for significant changes, let signed-in users know by
+        email.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        Questions? Write to <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>.
+      </p>
+    </article>
+  </div>
+</Base>

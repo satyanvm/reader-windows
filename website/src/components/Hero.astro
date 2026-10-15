@@ -1,0 +1,246 @@
+---
+import { site } from '../site.config';
+
+// One variant per platform; CSS shows the one matching <html data-platform>,
+// which is set before first paint (see Base.astro).
+const variants = site.platforms.map((p) => ({
+  id: p.id,
+  label: p.available ? p.heroLabel : `Coming soon to ${p.name}`,
+  href: p.available ? p.url : `#download-${p.id}`,
+  available: p.available,
+}));
+---
+
+<section class="hero" aria-labelledby="hero-title">
+  <div class="container">
+    <div class="copy">
+      <h1 id="hero-title">Pick up exactly where you left off.</h1>
+      <p class="sub">
+        Read PDFs and EPUBs in a calm, distraction-free space that keeps your place in sync across all your
+        devices.
+      </p>
+      <div class="actions">
+        {
+          variants.map((v) => (
+            <a
+              class={`btn ${v.available ? 'btn-primary' : 'btn-secondary'} cta-variant`}
+              data-for={v.id}
+              href={v.href}
+            >
+              {v.label}
+            </a>
+          ))
+        }
+        <a class="btn btn-primary cta-variant" data-for="unknown" href="#download">All platforms</a>
+        <a class="btn btn-secondary cta-all" href="#download">All platforms</a>
+      </div>
+    </div>
+
+    <div class="visual" aria-hidden="true">
+      <div class="device">
+        <div class="screen">
+          <div class="pill">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7" /><path d="M4 4v4h4" /></svg>
+            Resumed on page 187
+          </div>
+          <div class="page">
+            <p class="chapter">Chapter Eleven</p>
+            <div class="text">
+              <p>
+                The house was quiet in the way that only early mornings allow. She set the cup down beside the
+                window and opened the book to the page she had marked with nothing at all, trusting that she
+                would remember, and she did. The sentence waited for her exactly where she had left it the night
+                before, halfway through a thought about the sea.
+              </p>
+              <p>
+                Outside, the light came slowly over the rooftops. A bicycle passed, then another. Somewhere a
+                door closed. None of it reached her for long. There is a kind of attention that belongs only to
+                reading, patient and unhurried, and it returned to her now the way a tide returns to a familiar
+                shore, without asking and without fuss.
+              </p>
+              <p>
+                She read on. The chapter turned toward the harbour, toward the boats and the old man who mended
+                nets, and she followed it gladly, one line and then the next.
+              </p>
+            </div>
+            <p class="folio">187</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding-top: 72px;
+    padding-bottom: var(--section);
+    text-align: center;
+  }
+
+  @media (min-width: 768px) {
+    .hero {
+      padding-top: 112px;
+    }
+  }
+
+  .copy {
+    max-width: 760px;
+    margin-inline: auto;
+  }
+
+  h1 {
+    font-size: 36px;
+    line-height: 44px;
+    letter-spacing: -0.02em;
+    font-weight: 650;
+  }
+
+  @media (min-width: 768px) {
+    h1 {
+      font-size: 56px;
+      line-height: 64px;
+    }
+  }
+
+  .sub {
+    margin: 20px auto 0;
+    max-width: 560px;
+    font-size: 18px;
+    line-height: 30px;
+  }
+
+  .actions {
+    margin-top: 32px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .cta-variant {
+    display: none;
+  }
+
+  :global(html[data-platform='android']) .cta-variant[data-for='android'],
+  :global(html[data-platform='mac']) .cta-variant[data-for='mac'],
+  :global(html[data-platform='windows']) .cta-variant[data-for='windows'],
+  :global(html[data-platform='iphone']) .cta-variant[data-for='iphone'],
+  :global(html[data-platform='unknown']) .cta-variant[data-for='unknown'],
+  :global(html:not([data-platform])) .cta-variant[data-for='unknown'] {
+    display: inline-flex;
+  }
+
+  :global(html[data-platform='unknown']) .cta-all,
+  :global(html:not([data-platform])) .cta-all {
+    display: none;
+  }
+
+  /* Product visual */
+  .visual {
+    margin: 64px auto 0;
+    max-width: 820px;
+  }
+
+  .device {
+    padding: 10px;
+    border-radius: 22px;
+    background: #fff;
+    border: 1px solid var(--line);
+    box-shadow:
+      0 1px 2px rgba(17, 17, 17, 0.04),
+      0 24px 60px -24px rgba(60, 40, 20, 0.22);
+  }
+
+  .screen {
+    container-type: inline-size;
+    position: relative;
+    aspect-ratio: 3 / 4;
+    background: var(--paper);
+    border-radius: 13px;
+    overflow: hidden;
+    text-align: left;
+  }
+
+  @media (min-width: 640px) {
+    .screen {
+      aspect-ratio: 16 / 10;
+    }
+  }
+
+  .pill {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    padding: 5px 12px;
+    font-size: 12px;
+    line-height: 18px;
+    font-weight: 500;
+    color: var(--paper-ink);
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(122, 90, 58, 0.18);
+    border-radius: 999px;
+  }
+
+  .pill svg {
+    flex: none;
+  }
+
+  .page {
+    position: absolute;
+    inset: 0;
+    padding: 64px 9cqi 0;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-book);
+    color: var(--paper-ink);
+    font-size: 4.3cqi;
+    line-height: 1.62;
+  }
+
+  @media (min-width: 640px) {
+    .page {
+      padding: 13cqi 0 0;
+      width: 56%;
+      left: 22%;
+      font-size: 2.05cqi;
+    }
+  }
+
+  .chapter {
+    text-align: center;
+    font-size: 0.82em;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    margin-bottom: 1.4em;
+  }
+
+  .text {
+    flex: 1;
+    overflow: hidden;
+    text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+  }
+
+  .text p + p {
+    text-indent: 1.5em;
+  }
+
+  .folio {
+    position: relative;
+    background: var(--paper);
+    text-align: center;
+    font-size: 0.8em;
+    opacity: 0.9;
+    padding: 0.9em 0 1.4em;
+    box-shadow: 0 -1.6em 0 var(--paper);
+  }
+</style>

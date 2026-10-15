@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The Windows app: WPF on .NET 8, with WinRT (Windows.Data.Pdf, Windows.Media.Ocr) through the
+       10.0.19041 projections. Builds and runs with `dotnet build` / `dotnet run`; no Visual
+       Studio and no MSIX packaging needed. EnableWindowsTargeting lets it compile on other OSes. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <AssemblyName>Reader</AssemblyName>
+    <RootNamespace>Reader.App</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\Reader.ico</ApplicationIcon>
+    <Version>1.0.0</Version>
+    <Product>Reader</Product>
+    <!-- The Google "Desktop app" OAuth client id; the Continue with Google button is hidden without it.
+         Set with: dotnet build -p:ReaderGoogleClientId=123-abc.apps.googleusercontent.com -->
+    <ReaderGoogleClientId Condition="'$(ReaderGoogleClientId)' == ''">$(READER_GOOGLE_CLIENT_ID)</ReaderGoogleClientId>
+  </PropertyGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>ReaderGoogleClientId</_Parameter1>
+      <_Parameter2>$(ReaderGoogleClientId)</_Parameter2>
+    </AssemblyAttribute>
+    <InternalsVisibleTo Include="Reader.Core.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Reader.Core\Reader.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Reader.ico" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,65 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import SyncStrip from '../components/SyncStrip.astro';
+import Features from '../components/Features.astro';
+import ReadingDemo from '../components/ReadingDemo.astro';
+import Pricing from '../components/Pricing.astro';
+import Download from '../components/Download.astro';
+import Faq from '../components/Faq.astro';
+import { site } from '../site.config';
+
+const { pricing } = site;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: site.name,
+  description: site.description,
+  url: site.url,
+  image: new URL('/og.png', site.url).href,
+  applicationCategory: 'ReferenceApplication',
+  operatingSystem: site.platforms.filter((p) => p.available).map((p) => p.minOS).join(', '),
+  offers: [
+    {
+      '@type': 'Offer',
+      name: pricing.free.name,
+      price: pricing.free.price.toFixed(2),
+      priceCurrency: pricing.currency,
+    },
+    {
+      '@type': 'Offer',
+      name: `${pricing.sync.name} (monthly)`,
+      price: pricing.sync.monthly.toFixed(2),
+      priceCurrency: pricing.currency,
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price: pricing.sync.monthly.toFixed(2),
+        priceCurrency: pricing.currency,
+        billingDuration: 'P1M',
+      },
+    },
+    {
+      '@type': 'Offer',
+      name: `${pricing.sync.name} (yearly)`,
+      price: pricing.sync.yearly.toFixed(2),
+      priceCurrency: pricing.currency,
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price: pricing.sync.yearly.toFixed(2),
+        priceCurrency: pricing.currency,
+        billingDuration: 'P1Y',
+      },
+    },
+  ],
+};
+---
+
+<Base title={`${site.name}: calm reading for PDFs and EPUBs, in sync`} path="/" jsonLd={jsonLd}>
+  <Hero />
+  <SyncStrip />
+  <Features />
+  <ReadingDemo />
+  <Pricing />
+  <Download />
+  <Faq />
+</Base>

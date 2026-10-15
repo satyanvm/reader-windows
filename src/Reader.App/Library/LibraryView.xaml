@@ -1,0 +1,91 @@
+<UserControl x:Class="Reader.App.Library.LibraryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{DynamicResource BgBrush}"
+             FontFamily="{StaticResource UiFont}">
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Background="{DynamicResource ChromeBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,0,1" Padding="18,8,10,8">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button x:Name="AccountButton" Style="{StaticResource ToolButtonStyle}" Click="OnAccount">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="AccountGlyph" Text="&#xE77B;" FontFamily="{StaticResource IconFont}" FontSize="15" VerticalAlignment="Center" />
+                            <TextBlock x:Name="AccountText" Text="Sign In to Sync" Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="OpenButton" Style="{StaticResource ToolButtonStyle}" Click="OnOpen" ToolTip="Add a PDF or EPUB (Ctrl+O)" Margin="4,0,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE710;" FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center" />
+                            <TextBlock Text="Open Book" Margin="8,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                <TextBlock Text="Library" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{DynamicResource FgBrush}" />
+            </DockPanel>
+        </Border>
+
+        <!-- While signed in: "Syncing your library…", or the last library-sync error with Retry. -->
+        <Border x:Name="StatusStrip" DockPanel.Dock="Top" Visibility="Collapsed" Padding="18,6" Background="{DynamicResource HoverBrush}">
+            <DockPanel>
+                <Button x:Name="RetryButton" DockPanel.Dock="Right" Content="Retry" Style="{StaticResource LinkButton}" Click="OnRetry" VerticalAlignment="Center" />
+                <TextBlock x:Name="StatusText" Foreground="{DynamicResource FgBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+            </DockPanel>
+        </Border>
+
+        <Grid>
+            <ListBox x:Name="List" Background="Transparent" BorderThickness="0" Padding="8,8"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     MouseDoubleClick="OnDoubleClick" KeyDown="OnListKeyDown" ContextMenuOpening="OnContextMenuOpening">
+                <ListBox.ContextMenu>
+                    <ContextMenu x:Name="RowMenu">
+                        <MenuItem x:Name="OpenItem" Header="Open" Click="OnOpenSelected" />
+                        <MenuItem x:Name="RemoveItem" Header="Remove from Library" Click="OnRemoveSelected" />
+                    </ContextMenu>
+                </ListBox.ContextMenu>
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="{x:Type ListBoxItem}">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                                    <Border x:Name="Bd" Background="Transparent" CornerRadius="8" Padding="12,9" Margin="0,1">
+                                        <ContentPresenter />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBrush}" />
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SelectedBrush}" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Left" Text="{Binding Glyph}" FontFamily="{StaticResource IconFont}" FontSize="22"
+                                       Width="34" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}" />
+                            <StackPanel Margin="8,0,0,0">
+                                <TextBlock Text="{Binding Title}" FontSize="14.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                                           Foreground="{DynamicResource FgBrush}" />
+                                <TextBlock Text="{Binding Progress}" FontSize="12.5" Margin="0,2,0,0" Foreground="{DynamicResource MutedBrush}" />
+                            </StackPanel>
+                        </DockPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <StackPanel x:Name="Empty" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed">
+                <TextBlock Text="&#xE8F1;" FontFamily="{StaticResource IconFont}" FontSize="44" HorizontalAlignment="Center" Foreground="{DynamicResource MutedBrush}" />
+                <TextBlock Text="No books yet" FontSize="20" FontWeight="SemiBold" Margin="0,14,0,0" HorizontalAlignment="Center" Foreground="{DynamicResource FgBrush}" />
+                <TextBlock Text="Open a PDF or EPUB to start reading, or drop one here." Margin="0,6,0,16" HorizontalAlignment="Center" Foreground="{DynamicResource MutedBrush}" />
+                <Button Content="Open Book" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Center" Click="OnOpen" IsDefault="False" />
+            </StackPanel>
+
+            <Border x:Name="DropHint" Visibility="Collapsed" Margin="8" CornerRadius="10" BorderThickness="3" BorderBrush="{DynamicResource AccentBrush}" IsHitTestVisible="False" />
+        </Grid>
+    </DockPanel>
+</UserControl>

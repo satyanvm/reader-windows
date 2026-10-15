@@ -1,0 +1,58 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../site.config';
+---
+
+<Base title={`Privacy · ${site.name}`} description={`How ${site.name} handles your books and data.`} path="/privacy">
+  <div class="container section">
+    <article class="prose">
+      <h1>Privacy</h1>
+      <p class="muted">Last updated: October 2026</p>
+      <p class="notice">
+        This is a plain-language template and has not been reviewed by a lawyer. Please review it before relying on
+        it.
+      </p>
+
+      <h2>The short version</h2>
+      <p>
+        Your books stay on your devices. If you sign in, we store what is needed to sync your library and reading
+        positions between your devices. We do not show ads and we do not use third-party trackers.
+      </p>
+
+      <h2>Without an account</h2>
+      <p>
+        You can use {site.name} without signing in. Your books, reading positions and settings are stored only on
+        your device. Text recognition for scanned pages runs on your device. Nothing is sent to us.
+      </p>
+
+      <h2>When you sign in</h2>
+      <p>You can sign in with email or Google. When you do, we store:</p>
+      <ul>
+        <li>your email address, so you can sign in and we can contact you about your account;</li>
+        <li>your library files, so a book you add on one device can appear on your other devices;</li>
+        <li>your reading positions, so you can pick up where you left off on any device.</li>
+      </ul>
+      <p>
+        When you remove a book from your library, it is removed from your other devices and from our storage.
+      </p>
+
+      <h2>What we don’t do</h2>
+      <ul>
+        <li>We don’t show ads.</li>
+        <li>We don’t use third-party trackers or sell your data.</li>
+        <li>We don’t read your books or use them for anything other than syncing them for you.</li>
+      </ul>
+
+      <h2>Your choices</h2>
+      <p>
+        You can stop syncing at any time by signing out. To get a copy of your account data or to delete your
+        account, email <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        Questions about privacy? Write to <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>.
+      </p>
+    </article>
+  </div>
+</Base>

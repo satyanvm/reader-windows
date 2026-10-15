@@ -1,0 +1,78 @@
+---
+import { site } from '../site.config';
+---
+
+<section id="faq" class="section" aria-labelledby="faq-title">
+  <div class="container narrow">
+    <div class="section-head reveal">
+      <p class="eyebrow">FAQ</p>
+      <h2 id="faq-title">Questions, answered.</h2>
+    </div>
+    <div class="list reveal">
+      {
+        site.faq.map((item) => (
+          <details>
+            <summary>
+              <span>{item.q}</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+                <path d="M5 12h14" />
+                <path class="v" d="M12 5v14" />
+              </svg>
+            </summary>
+            <p>{item.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .narrow {
+    max-width: calc(760px + var(--gutter) * 2);
+  }
+
+  .list {
+    border-top: 1px solid var(--line);
+  }
+
+  details {
+    border-bottom: 1px solid var(--line);
+  }
+
+  summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 0;
+    cursor: pointer;
+    color: var(--ink);
+    font-weight: 500;
+    font-size: 17px;
+    line-height: 26px;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary svg {
+    flex: none;
+    color: var(--muted-text);
+  }
+
+  .v {
+    transition: transform 0.2s var(--ease-out);
+    transform-origin: center;
+  }
+
+  details[open] .v {
+    transform: scaleY(0);
+  }
+
+  details p {
+    padding: 0 40px 24px 0;
+  }
+</style>

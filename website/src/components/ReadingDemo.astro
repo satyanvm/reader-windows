@@ -1,0 +1,463 @@
+---
+const firstPage = 187;
+const pages = [
+  'The harbour was small enough to cross in a few minutes, and she walked it slowly. Boats knocked gently against the quay. The air smelled of salt and rope and the bread from the bakery on the corner, which had opened its shutters an hour before anyone else.',
+  'The old man was where she had hoped he would be, sitting on an upturned crate with a net across his knees. He did not look up. His hands moved through the knots without hurry, finding each broken place by touch, the way a reader finds her line.',
+  '“You came back,” he said at last. She sat down on the step beside him and watched the water. It was not a question, so she did not answer it. The tide was turning. Gulls drifted above the breakwater, patient, waiting for the boats to come in.',
+  'For a long while neither of them spoke. She had brought a book, as she always did, and she opened it now on her knee. The page was where she had left it. The sentence picked up from the comma, as though no time had passed at all.',
+  'There is a particular pleasure in returning to a story. The first few lines are always a little strange, like a room after a holiday. Then the voice comes back, and the people, and the weather of the book settles around you again.',
+  'The old man finished one net and began another. Every so often he held a section up to the light, turning it, looking for the gaps. When he found one he made a small sound of satisfaction, as if the gap had been hiding from him on purpose.',
+  'By noon the first boats were in. Men called to each other across the water. Crates were lifted, counted, carried away. She read through all of it, half listening, letting the noise of the harbour become part of the page, the way rain becomes part of sleep.',
+  'Later she would not remember exactly what she read that day, only how it felt: unhurried, held, entirely her own. The book did not ask anything of her. It was simply there, ready, at the place where she had stopped, whenever she wanted it.',
+  '“What is it about?” the old man asked, nodding at the book. She thought about it. “A woman who goes back to the sea,” she said. He laughed, a short dry laugh, and went back to his net. “They always do,” he said. “Sooner or later.”',
+  'The afternoon light turned gold and then grey. The bakery closed its shutters. One by one the boats were tied up for the night, their lamps lit, their reflections trembling in the dark water like lines of handwriting.',
+  'She closed the book without marking the page. She did not need to. Tomorrow, wherever she opened it, on whatever shore, it would be waiting for her at the same line, the same word, halfway through the same thought about the sea.',
+  'The old man gathered up his nets and nodded to her once. She nodded back. Then she walked home along the harbour wall, slowly, the way she had come, with the book under her arm and the tide coming in behind her.',
+];
+const lastPage = firstPage + pages.length - 1;
+const themes = [
+  { id: 'white', label: 'White' },
+  { id: 'sepia', label: 'Sepia' },
+  { id: 'dark', label: 'Dark' },
+  { id: 'black', label: 'Black' },
+];
+---
+
+<section id="reading" class="section band" aria-labelledby="reading-title">
+  <div class="container">
+    <div class="section-head center reveal">
+      <p class="eyebrow">Reading experience</p>
+      <h2 id="reading-title">Your page, your way.</h2>
+      <p>
+        Choose a theme, show one page or two, and turn pages with the same gentle slide as the app. Try the
+        arrows, or press ← and →.
+      </p>
+    </div>
+
+    <div class="demo reveal" data-theme="sepia" data-spread="1" data-first={firstPage}>
+      <div class="controls">
+        <div class="chips" role="group" aria-label="Reading theme">
+          {
+            themes.map((t) => (
+              <button type="button" class="chip" data-theme-btn={t.id} aria-pressed={t.id === 'sepia' ? 'true' : 'false'}>
+                <span class={`swatch sw-${t.id}`} aria-hidden="true" />
+                {t.label}
+              </button>
+            ))
+          }
+        </div>
+        <div class="seg" role="group" aria-label="Pages shown">
+          <button type="button" data-spread-btn="1" aria-pressed="true">One page</button>
+          <button type="button" data-spread-btn="2" aria-pressed="false">Two pages</button>
+        </div>
+      </div>
+
+      <div class="stage">
+        <div class="viewport">
+          <div class="spread">
+            <article class="mpage">
+              <div class="inner">
+                <p class="head">The Quiet Harbour</p>
+                <p class="body">{pages[0]}</p>
+                <p class="folio">{firstPage}</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+
+      <div class="pager">
+        <button type="button" class="arrow" data-dir="-1" aria-label="Previous page">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>
+        </button>
+        <p class="status small" aria-live="polite" aria-atomic="true">Page {firstPage} of {lastPage}</p>
+        <button type="button" class="arrow" data-dir="1" aria-label="Next page">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
+        </button>
+      </div>
+      <script type="application/json" class="demo-pages" set:html={JSON.stringify(pages)} />
+    </div>
+  </div>
+</section>
+
+<style>
+  .demo {
+    --p-bg: #fff;
+    --p-ink: #222;
+    --p-muted: #6f6f6f;
+    --p-edge: var(--line);
+    max-width: 880px;
+    margin-inline: auto;
+  }
+
+  .demo[data-theme='sepia'] {
+    --p-bg: #f5ecd9;
+    --p-ink: #3b2f24;
+    --p-muted: #6e5a45;
+    --p-edge: #e6dac2;
+  }
+  .demo[data-theme='dark'] {
+    --p-bg: #1d1d1f;
+    --p-ink: #dadada;
+    --p-muted: #a0a0a0;
+    --p-edge: #1d1d1f;
+  }
+  .demo[data-theme='black'] {
+    --p-bg: #000;
+    --p-ink: #c9c9c9;
+    --p-muted: #959595;
+    --p-edge: #000;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px 24px;
+    margin-bottom: 28px;
+  }
+
+  .chips,
+  .seg {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .chip,
+  .seg button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--body);
+    font: inherit;
+    font-size: 14px;
+    line-height: 20px;
+    cursor: pointer;
+  }
+
+  .chip[aria-pressed='true'],
+  .seg button[aria-pressed='true'] {
+    border-color: var(--accent);
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+
+  @media (max-width: 479px) {
+    .controls {
+      gap: 10px;
+    }
+    .chips {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      width: 100%;
+    }
+    .chip {
+      justify-content: center;
+      gap: 6px;
+      padding: 0 6px;
+    }
+    .swatch {
+      width: 12px !important;
+      height: 12px !important;
+      flex: none;
+    }
+  }
+
+  @media (max-width: 359px) {
+    .chip {
+      font-size: 13px;
+    }
+  }
+
+  .swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+  }
+  .sw-white {
+    background: #fff;
+  }
+  .sw-sepia {
+    background: #f5ecd9;
+  }
+  .sw-dark {
+    background: #1d1d1f;
+  }
+  .sw-black {
+    background: #000;
+  }
+
+  .stage {
+    display: flex;
+    justify-content: center;
+  }
+
+  .viewport {
+    display: grid;
+    overflow: hidden;
+    width: 100%;
+    max-width: 400px;
+    border-radius: 12px;
+    border: 1px solid var(--p-edge);
+    background: var(--p-bg);
+    box-shadow: 0 18px 48px -28px rgba(40, 30, 20, 0.35);
+    transition:
+      background-color 0.3s ease,
+      border-color 0.3s ease;
+  }
+
+  .demo[data-spread='2'] .viewport {
+    max-width: 800px;
+  }
+
+  .spread {
+    grid-area: 1 / 1;
+    display: flex;
+    background: var(--p-bg);
+    transition: background-color 0.3s ease;
+  }
+
+  .mpage {
+    container-type: inline-size;
+    flex: 1 1 0;
+    min-width: 0;
+    aspect-ratio: 3 / 4;
+    position: relative;
+  }
+
+  .inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 9cqi 10cqi 0;
+    font-family: var(--font-book);
+    font-size: 5.5cqi;
+    line-height: 1.6;
+    color: var(--p-ink);
+    transition: color 0.3s ease;
+  }
+
+  .mpage + .mpage {
+    border-left: 1px solid color-mix(in srgb, var(--p-ink) 10%, transparent);
+  }
+
+  .head,
+  .folio {
+    font-family: var(--font-ui);
+    font-size: 0.66em;
+    line-height: 1.4;
+    letter-spacing: 0.06em;
+    color: var(--p-muted);
+    text-align: center;
+  }
+
+  .head {
+    text-transform: uppercase;
+    margin-bottom: 1.6em;
+  }
+
+  .body {
+    flex: 1;
+    overflow: hidden;
+    text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+  }
+
+  .folio {
+    padding: 1em 0 1.6em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .arrow {
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .arrow:hover:not(:disabled) {
+    border-color: #d0d0d0;
+  }
+
+  .arrow:disabled {
+    color: #c4c4c4;
+    cursor: default;
+  }
+
+  .status {
+    min-width: 128px;
+    text-align: center;
+    color: var(--muted-text);
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+
+<script>
+  const demo = document.querySelector<HTMLElement>('.demo');
+  if (demo) {
+    const pages: string[] = JSON.parse(demo.querySelector('.demo-pages')!.textContent || '[]');
+    const first = Number(demo.dataset.first);
+    const viewport = demo.querySelector<HTMLElement>('.viewport')!;
+    const status = demo.querySelector<HTMLElement>('.status')!;
+    const prev = demo.querySelector<HTMLButtonElement>('[data-dir="-1"]')!;
+    const next = demo.querySelector<HTMLButtonElement>('[data-dir="1"]')!;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    let index = 0;
+    let spread = 1;
+
+    const makePage = (i: number) => {
+      const art = document.createElement('article');
+      art.className = 'mpage';
+      const head = document.createElement('p');
+      head.className = 'head';
+      head.textContent = 'The Quiet Harbour';
+      const body = document.createElement('p');
+      body.className = 'body';
+      body.textContent = pages[i] ?? '';
+      const folio = document.createElement('p');
+      folio.className = 'folio';
+      folio.textContent = pages[i] ? String(first + i) : '';
+      const inner = document.createElement('div');
+      inner.className = 'inner';
+      inner.append(head, body, folio);
+      art.append(inner);
+      return art;
+    };
+
+    // Astro scopes styles with a data attribute; copy it onto new nodes.
+    const scopeAttr = [...viewport.attributes].find((a) => a.name.startsWith('data-astro-cid'))?.name;
+    const scoped = <T extends Element>(el: T): T => {
+      if (scopeAttr) {
+        el.setAttribute(scopeAttr, '');
+        el.querySelectorAll('*').forEach((c) => c.setAttribute(scopeAttr, ''));
+      }
+      return el;
+    };
+
+    const makeSpread = () => {
+      const s = document.createElement('div');
+      s.className = 'spread';
+      for (let k = 0; k < spread; k++) s.append(makePage(index + k));
+      return scoped(s);
+    };
+
+    const updateStatus = () => {
+      const a = first + index;
+      const last = first + pages.length - 1;
+      status.textContent =
+        spread === 2 ? `Pages ${a}–${Math.min(a + 1, last)} of ${last}` : `Page ${a} of ${last}`;
+      prev.disabled = index === 0;
+      next.disabled = index + spread >= pages.length;
+    };
+
+    // Cleanup for an in-flight slide. Runs on finish, on a timer fallback
+    // (animations pause in background tabs) or when a new turn starts.
+    let settle: (() => void) | null = null;
+
+    const render = (dir = 0) => {
+      settle?.();
+      const incoming = makeSpread();
+      const outgoing = viewport.querySelector<HTMLElement>('.spread');
+      if (!dir || !outgoing || reduced.matches || !incoming.animate) {
+        viewport.replaceChildren(incoming);
+        updateStatus();
+        return;
+      }
+      viewport.append(incoming);
+      const opts: KeyframeAnimationOptions = { duration: 380, easing: 'ease-out' };
+      const out = outgoing.animate(
+        [{ transform: 'translateX(0)' }, { transform: `translateX(${-dir * 100}%)` }],
+        opts,
+      );
+      const inn = incoming.animate(
+        [{ transform: `translateX(${dir * 100}%)` }, { transform: 'translateX(0)' }],
+        opts,
+      );
+      updateStatus();
+      const timer = window.setTimeout(() => settle?.(), 450);
+      settle = () => {
+        settle = null;
+        clearTimeout(timer);
+        out.cancel();
+        inn.cancel();
+        outgoing.remove();
+      };
+      inn.onfinish = () => settle?.();
+    };
+
+    const turn = (dir: number) => {
+      const target = index + dir * spread;
+      if (target < 0 || target >= pages.length) return;
+      index = target;
+      render(dir);
+    };
+
+    prev.addEventListener('click', () => turn(-1));
+    next.addEventListener('click', () => turn(1));
+
+    demo.querySelectorAll<HTMLButtonElement>('[data-theme-btn]').forEach((b) =>
+      b.addEventListener('click', () => {
+        demo.dataset.theme = b.dataset.themeBtn;
+        demo
+          .querySelectorAll('[data-theme-btn]')
+          .forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+      }),
+    );
+
+    demo.querySelectorAll<HTMLButtonElement>('[data-spread-btn]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const n = Number(b.dataset.spreadBtn);
+        if (n === spread) return;
+        spread = n;
+        if (spread === 2) index -= index % 2;
+        demo.dataset.spread = String(n);
+        demo
+          .querySelectorAll('[data-spread-btn]')
+          .forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+        render();
+      }),
+    );
+
+    // ←/→ turn pages while the demo is on screen and focus isn't in a field.
+    let inView = false;
+    new IntersectionObserver(([e]) => (inView = e.isIntersecting), { threshold: 0.5 }).observe(viewport);
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      const t = e.target instanceof Element ? e.target : null;
+      const focusInDemo = !!t && demo.contains(t);
+      const inField = !!t?.closest('input, textarea, select, [contenteditable]');
+      if (!focusInDemo && (!inView || inField)) return;
+      e.preventDefault();
+      turn(e.key === 'ArrowRight' ? 1 : -1);
+    });
+
+    updateStatus();
+  }
+</script>

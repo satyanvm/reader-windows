@@ -1,0 +1,162 @@
+---
+const lines = [100, 92, 97, 88, 95, 70];
+---
+
+<section class="sync band" aria-labelledby="sync-title">
+  <div class="container">
+    <div class="devices reveal" aria-hidden="true">
+      <div class="dev phone">
+        <div class="scr">
+          {lines.slice(0, 5).map((w) => <span class="ln" style={`width:${w}%`} />)}
+          <span class="pg">p. 187</span>
+        </div>
+      </div>
+      <div class="dev laptop">
+        <div class="scr">
+          {lines.map((w) => <span class="ln" style={`width:${w}%`} />)}
+          <span class="pg">p. 187</span>
+        </div>
+        <div class="base"></div>
+      </div>
+      <div class="dev desktop">
+        <div class="scr">
+          {lines.map((w) => <span class="ln" style={`width:${w}%`} />)}
+          <span class="pg">p. 187</span>
+        </div>
+        <div class="neck"></div>
+        <div class="foot"></div>
+      </div>
+    </div>
+    <p id="sync-title" class="caption reveal">Same book, same line, every device.</p>
+  </div>
+</section>
+
+<style>
+  .sync {
+    padding-block: 64px;
+  }
+
+  @media (min-width: 768px) {
+    .sync {
+      padding-block: 88px;
+    }
+  }
+
+  .devices {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: clamp(16px, 5vw, 56px);
+  }
+
+  .dev {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--muted);
+  }
+
+  .scr {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    border: 1.5px solid #b9b9b9;
+    background: #fff;
+    padding: 12px 10px 22px;
+  }
+
+  .ln {
+    display: block;
+    height: 3px;
+    border-radius: 2px;
+    background: #e3ddd2;
+  }
+
+  .pg {
+    position: absolute;
+    bottom: 5px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .phone .scr {
+    width: 52px;
+    height: 96px;
+    border-radius: 10px;
+    padding: 14px 8px 22px;
+  }
+
+  .laptop .scr {
+    width: 128px;
+    height: 82px;
+    border-radius: 6px 6px 0 0;
+    padding: 12px 22px 22px;
+  }
+
+  .laptop .base {
+    width: 156px;
+    height: 7px;
+    border: 1.5px solid #b9b9b9;
+    border-top: 0;
+    border-radius: 0 0 8px 8px;
+  }
+
+  .desktop .scr {
+    width: 150px;
+    height: 98px;
+    border-radius: 6px;
+    padding: 14px 28px 22px;
+  }
+
+  .desktop .neck {
+    width: 1.5px;
+    height: 14px;
+    background: #b9b9b9;
+  }
+
+  .desktop .foot {
+    width: 54px;
+    height: 1.5px;
+    background: #b9b9b9;
+  }
+
+  @media (max-width: 420px) {
+    .laptop .scr {
+      width: 96px;
+      height: 64px;
+      padding: 10px 14px 20px;
+    }
+    .laptop .base {
+      width: 116px;
+    }
+    .desktop .scr {
+      width: 104px;
+      height: 72px;
+      padding: 10px 16px 20px;
+    }
+    .phone .scr {
+      width: 42px;
+      height: 78px;
+    }
+    .ln:nth-child(n + 5) {
+      display: none;
+    }
+  }
+
+  .caption {
+    margin-top: 32px;
+    text-align: center;
+    color: var(--ink);
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+</style>

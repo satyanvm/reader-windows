@@ -1,0 +1,20 @@
+{
+  "name": "readserene-website",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "astro dev",
+    "assets": "node scripts/generate-images.mjs",
+    "build": "node scripts/generate-images.mjs && astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/literata": "^5.3.0",
+    "astro": "^7.3.8"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.5"
+  }
+}

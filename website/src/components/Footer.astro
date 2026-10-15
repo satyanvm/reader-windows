@@ -1,0 +1,67 @@
+---
+import Wordmark from './Wordmark.astro';
+import { site } from '../site.config';
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container inner">
+    <div class="about">
+      <a class="brand" href="/" aria-label="Readserene home"><Wordmark /></a>
+      <p class="muted small">{site.tagline}</p>
+    </div>
+    <nav aria-label="Footer">
+      <ul>
+        <li><a href="/privacy">Privacy</a></li>
+        <li><a href="/terms">Terms</a></li>
+        <li><a href={`mailto:${site.contactEmail}`}>Contact</a></li>
+        <li><a href={site.githubUrl} rel="noopener">GitHub</a></li>
+      </ul>
+    </nav>
+    <p class="copy muted small">© {year} {site.name}</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--line);
+    padding-block: 48px;
+  }
+  .inner {
+    display: grid;
+    gap: 24px;
+  }
+  .brand {
+    text-decoration: none;
+    display: inline-flex;
+    margin-bottom: 8px;
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 24px;
+  }
+  ul a {
+    color: var(--body);
+    text-decoration: none;
+    font-size: 15px;
+    display: inline-block;
+    padding: 8px 0;
+  }
+  ul a:hover {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+  @media (min-width: 768px) {
+    .inner {
+      grid-template-columns: 1fr auto;
+      align-items: start;
+    }
+    .copy {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

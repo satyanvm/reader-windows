@@ -1,0 +1,203 @@
+---
+import Wordmark from './Wordmark.astro';
+
+interface Props {
+  nav?: boolean;
+}
+const { nav = true } = Astro.props;
+
+const links = [
+  { href: '/#features', label: 'Features' },
+  { href: '/#pricing', label: 'Pricing' },
+  { href: '/#download', label: 'Download' },
+  { href: '/#faq', label: 'FAQ' },
+];
+---
+
+<header class="site-header">
+  <div class="container bar">
+    <a class="brand" href="/" aria-label="Readserene home"><Wordmark /></a>
+
+    {
+      nav && (
+        <>
+          <nav class="nav" aria-label="Main">
+            <ul id="nav-list" class="nav-list">
+              {links.map((l) => (
+                <li>
+                  <a href={l.href}>{l.label}</a>
+                </li>
+              ))}
+              <li class="nav-cta-mobile">
+                <a class="btn btn-primary" href="/#download">
+                  Download
+                </a>
+              </li>
+            </ul>
+          </nav>
+          <a class="btn btn-primary nav-cta" href="/#download">
+            Download
+          </a>
+          <button
+            class="menu-btn"
+            type="button"
+            aria-expanded="false"
+            aria-controls="nav-list"
+            aria-label="Open menu"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+              <path class="l1" d="M4 8h16" />
+              <path class="l2" d="M4 16h16" />
+            </svg>
+          </button>
+        </>
+      )
+    }
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: saturate(180%) blur(12px);
+    -webkit-backdrop-filter: saturate(180%) blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .bar {
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .brand {
+    color: var(--ink);
+    text-decoration: none;
+    margin-right: auto;
+    display: inline-flex;
+    padding: 6px 0;
+  }
+
+  .nav-list {
+    display: flex;
+    gap: 28px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav-list a:not(.btn) {
+    color: var(--body);
+    text-decoration: none;
+    font-size: 15px;
+    padding: 8px 0;
+  }
+
+  .nav-list a:not(.btn):hover {
+    color: var(--ink);
+  }
+
+  .nav-cta-mobile {
+    display: none;
+  }
+
+  .menu-btn {
+    display: none;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    margin-right: -10px;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+
+  .menu-btn path {
+    transition: transform 0.2s var(--ease-out);
+    transform-origin: 12px 12px;
+  }
+
+  .menu-btn[aria-expanded='true'] .l1 {
+    transform: translateY(4px) rotate(45deg);
+  }
+  .menu-btn[aria-expanded='true'] .l2 {
+    transform: translateY(-4px) rotate(-45deg);
+  }
+
+  @media (max-width: 767px) {
+    .nav-cta {
+      display: none;
+    }
+
+    .menu-btn {
+      display: inline-flex;
+    }
+
+    .nav-list {
+      position: absolute;
+      top: var(--header-h);
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      gap: 0;
+      padding: 8px var(--gutter) 20px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      display: none;
+    }
+
+    .nav-list.open {
+      display: flex;
+    }
+
+    .nav-list li:not(.nav-cta-mobile) {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav-list a:not(.btn) {
+      display: block;
+      padding: 12px 0;
+      font-size: 17px;
+      color: var(--ink);
+    }
+
+    .nav-cta-mobile {
+      display: block;
+      margin-top: 16px;
+    }
+
+    .nav-cta-mobile .btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  const btn = document.querySelector<HTMLButtonElement>('.menu-btn');
+  const list = document.getElementById('nav-list');
+  if (btn && list) {
+    const set = (open: boolean) => {
+      btn.setAttribute('aria-expanded', String(open));
+      btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      list.classList.toggle('open', open);
+    };
+    btn.addEventListener('click', () => set(btn.getAttribute('aria-expanded') !== 'true'));
+    list.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('a')) set(false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && btn.getAttribute('aria-expanded') === 'true') {
+        set(false);
+        btn.focus();
+      }
+    });
+    window.matchMedia('(min-width: 768px)').addEventListener('change', () => set(false));
+  }
+</script>
