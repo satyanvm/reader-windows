@@ -253,7 +253,7 @@ internal static class SelfTest
 
         if (step is "all" or "themes")
         {
-            foreach (var theme in new[] { ReaderTheme.Dark, ReaderTheme.Black, ReaderTheme.Sepia })
+            foreach (var theme in new[] { ReaderTheme.White, ReaderTheme.Dark, ReaderTheme.Black, ReaderTheme.Sepia })
             {
                 AppGraph.ApplyTheme(theme);
                 await Task.Delay(300);

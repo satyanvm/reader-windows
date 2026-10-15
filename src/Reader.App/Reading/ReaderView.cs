@@ -3,7 +3,9 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Reader.Core.App;
 using Reader.Core.Reader;
@@ -87,8 +89,8 @@ internal sealed class ReaderView : DockPanel
         _spreadToggle = new ToggleButton { Style = (Style)Application.Current.Resources["ToolToggleStyle"], Content = _spreadGlyph };
         _spreadToggle.Click += (_, _) => SetTwoPages(_spreadToggle.IsChecked == true);
 
-        _zoomOut = IconButton("", "Zoom Out (Ctrl+-)", () => Model.ZoomOut());
-        _zoomIn = IconButton("", "Zoom In (Ctrl+=)", () => Model.ZoomIn());
+        _zoomOut = IconButton("", "Zoom Out (Ctrl+-)", () => Dissolve(Model.ZoomOut));
+        _zoomIn = IconButton("", "Zoom In (Ctrl+=)", () => Dissolve(Model.ZoomIn));
         _settingsButton = IconButton("", "Reading Settings: text size, theme, page by page or continuous", ShowSettingsMenu);
         _moreButton = IconButton("", "More", ShowMoreMenu);
 
@@ -321,6 +323,8 @@ internal sealed class ReaderView : DockPanel
         var mode = Model.State.Mode;
         if (_shownMode == mode && (Flow is not null || Pages is not null)) return;
         Animator.FinishNow();
+        // Switching between original pages and flowing text dissolves from one to the other.
+        var before = IsLoaded ? SnapshotContent() : null;
         if (Flow is not null)
         {
             Flow.Detach();
@@ -347,7 +351,7 @@ internal sealed class ReaderView : DockPanel
         }
         else if (Model.Pdf is { } pdf)
         {
-            Pages = new PagesView(Model, pdf, _graph);
+            Pages = new PagesView(Model, pdf, _graph) { Animator = Animator };
             Pages.Moved += UpdateScrubber;
             view = Pages;
         }
@@ -356,12 +360,45 @@ internal sealed class ReaderView : DockPanel
             return;
         }
         _content.Children.Insert(0, view);
+        if (before is not null) Animator.FadeFrom(before, ModeDissolve);
+        else FadeIn(view);
         Dispatcher.BeginInvoke(() =>
         {
             Flow?.Sync();
             Pages?.Sync();
             FocusContent();
         }, DispatcherPriority.Loaded);
+    }
+
+    private static readonly TimeSpan ModeDissolve = TimeSpan.FromSeconds(0.34);
+
+    /// <summary>A newly opened book's pages fade in over the background instead of appearing at once.</summary>
+    private static void FadeIn(UIElement view)
+    {
+        if (!SystemParameters.ClientAreaAnimation) return;
+        view.Opacity = 0;
+        var fade = new DoubleAnimation(0, 1, ModeDissolve) { EasingFunction = new CubicBezierEase(), FillBehavior = FillBehavior.Stop };
+        fade.Completed += (_, _) => view.Opacity = 1;
+        view.BeginAnimation(OpacityProperty, fade);
+    }
+
+    private BitmapSource? SnapshotContent()
+    {
+        if (Flow is { ActualWidth: > 0 } f) return f.Snapshot();
+        if (Pages is { ActualWidth: > 0 } p) return p.Snapshot();
+        return null;
+    }
+
+    /// <summary>
+    /// Makes a change that redraws the whole page (text size, zoom, theme, one or two pages, page by
+    /// page or continuous) and dissolves into the result instead of jumping.
+    /// </summary>
+    public void Dissolve(Action change)
+    {
+        Animator.FinishNow();
+        var before = IsLoaded ? SnapshotContent() : null;
+        change();
+        if (before is not null) Animator.FadeFrom(before);
     }
 
     public void FocusContent()
@@ -456,14 +493,14 @@ internal sealed class ReaderView : DockPanel
         var textMode = Model.IsTextMode;
         var menu = new ContextMenu { PlacementTarget = _settingsButton, Placement = PlacementMode.Bottom };
         menu.Items.Add(new MenuItem { Header = $"Text Size · {(int)Math.Round(Model.State.TextScale * 100)}%", IsEnabled = false });
-        menu.Items.Add(Item("Larger", "Ctrl+=", () => Model.ZoomIn(), textMode && Model.CanZoomIn));
-        menu.Items.Add(Item("Smaller", "Ctrl+-", () => Model.ZoomOut(), textMode && Model.CanZoomOut));
-        menu.Items.Add(Item("Default Size", "Ctrl+0", () => Model.SetTextScale(1), textMode));
+        menu.Items.Add(Item("Larger", "Ctrl+=", () => Dissolve(Model.ZoomIn), textMode && Model.CanZoomIn));
+        menu.Items.Add(Item("Smaller", "Ctrl+-", () => Dissolve(Model.ZoomOut), textMode && Model.CanZoomOut));
+        menu.Items.Add(Item("Default Size", "Ctrl+0", () => Dissolve(() => Model.SetTextScale(1)), textMode));
         menu.Items.Add(new Separator());
         menu.Items.Add(new MenuItem { Header = "Theme", IsEnabled = false });
-        foreach (var theme in new[] { ReaderTheme.Dark, ReaderTheme.Sepia, ReaderTheme.Black })
+        foreach (var theme in new[] { ReaderTheme.White, ReaderTheme.Sepia, ReaderTheme.Dark, ReaderTheme.Black })
         {
-            var item = Item(theme.Label(), null, () => AppGraph.ApplyTheme(theme), true);
+            var item = Item(theme.Label(), null, () => Dissolve(() => AppGraph.ApplyTheme(theme)), true);
             item.IsChecked = s.Theme == theme;
             menu.Items.Add(item);
         }
@@ -474,6 +511,21 @@ internal sealed class ReaderView : DockPanel
         continuous.IsChecked = !s.PageByPage;
         menu.Items.Add(paged);
         menu.Items.Add(continuous);
+        menu.Items.Add(new Separator());
+        var one = Item("One Page", "Ctrl+Alt+1", () => SetTwoPages(false), true);
+        one.IsChecked = !s.TwoPages;
+        var two = Item("Two Pages", "Ctrl+Alt+2", () => SetTwoPages(true), true);
+        two.IsChecked = s.TwoPages;
+        menu.Items.Add(one);
+        menu.Items.Add(two);
+        if (s.TwoPages && !TwoPagesFit)
+        {
+            menu.Items.Add(new MenuItem { Header = "Widen the window to see two pages", IsEnabled = false });
+        }
+        else if (s.TwoPages && textMode && !s.PageByPage)
+        {
+            menu.Items.Add(new MenuItem { Header = "Two pages show when reading page by page", IsEnabled = false });
+        }
         menu.IsOpen = true;
     }
 
@@ -495,22 +547,34 @@ internal sealed class ReaderView : DockPanel
     public void SetPaged(bool paged)
     {
         if (_graph.Settings.PageByPage == paged) return;
-        _graph.Settings.PageByPage = paged;
-        _graph.Settings.Save();
-        Animator.FinishNow();
-        Flow?.Sync();
-        Refresh();
+        Dissolve(() =>
+        {
+            _graph.Settings.PageByPage = paged;
+            _graph.Settings.Save();
+            Flow?.Sync();
+            Refresh();
+        });
     }
+
+    /// <summary>Whether the window is wide enough for two pages side by side.</summary>
+    private bool TwoPagesFit => _content.ActualWidth >= (Model.IsTextMode ? FlowView.SpreadMinWidth : SpreadLayout.MinSpreadWidth);
 
     /// <summary>One page or two (a spread), for every book on this device.</summary>
     public void SetTwoPages(bool two)
     {
-        _graph.Settings.TwoPages = two;
-        _graph.Settings.Save();
-        Animator.FinishNow();
-        Flow?.Sync();
-        Pages?.Sync();
-        Refresh();
+        if (_graph.Settings.TwoPages == two)
+        {
+            Refresh();
+            return;
+        }
+        Dissolve(() =>
+        {
+            _graph.Settings.TwoPages = two;
+            _graph.Settings.Save();
+            Flow?.Sync();
+            Pages?.Sync();
+            Refresh();
+        });
     }
 
     // Find
@@ -564,9 +628,9 @@ internal sealed class ReaderView : DockPanel
             {
                 case Key.D1 or Key.NumPad1: Model.SetMode(ReadingMode.Pages); return true;
                 case Key.D2 or Key.NumPad2: Model.SetMode(ReadingMode.Text); return true;
-                case Key.OemPlus or Key.Add: Model.ZoomIn(); return true;
-                case Key.OemMinus or Key.Subtract: Model.ZoomOut(); return true;
-                case Key.D0 or Key.NumPad0: Model.ActualSize(); return true;
+                case Key.OemPlus or Key.Add: Dissolve(Model.ZoomIn); return true;
+                case Key.OemMinus or Key.Subtract: Dissolve(Model.ZoomOut); return true;
+                case Key.D0 or Key.NumPad0: Dissolve(Model.ActualSize); return true;
                 case Key.F: OpenFind(); return true;
             }
             return false;
@@ -595,7 +659,7 @@ internal sealed class ReaderView : DockPanel
                 _zoomAccum += delta;
                 if (Math.Abs(_zoomAccum) >= 60)
                 {
-                    if (_zoomAccum > 0) Model.ZoomIn(); else Model.ZoomOut();
+                    if (_zoomAccum > 0) Dissolve(Model.ZoomIn); else Dissolve(Model.ZoomOut);
                     _zoomAccum = 0;
                 }
                 return true;
@@ -624,7 +688,7 @@ internal sealed class ReaderView : DockPanel
         if (_closed) return;
         _closed = true;
         _noticeTimer.Stop();
-        Animator.FinishNow();
+        Animator.Stop();
         Model.Controller.Changed -= OnChanged;
         Flow?.Detach();
         Pages?.Detach();

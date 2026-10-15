@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using Reader.Core.App;
 using Reader.Core.Reader;
 using Reader.Core.Text;
 
@@ -16,6 +17,9 @@ namespace Reader.App.Reading;
 /// magnification of that layout, so zooming never changes the layout's coordinates. Pages are
 /// rendered lazily by Windows.Data.Pdf and cached; page heights come from the crop boxes, so a
 /// restore never waits for rendering.
+///
+/// Next and previous page (←/→, and a pair at a time in a spread) slide with the same page-turn
+/// animation as flowing text.
 /// </summary>
 internal sealed class PagesView : FrameworkElement
 {
@@ -47,6 +51,11 @@ internal sealed class PagesView : FrameworkElement
     private readonly HashSet<(int Page, int Width)> _rendering = new();
     private const int KeepBitmaps = 24;
 
+    public PageTurnAnimator? Animator { get; set; }
+
+    /// <summary>A turn waiting for its restore to land: the picture before it, and its direction.</summary>
+    private (BitmapSource Before, bool Forward, long At)? _pendingTurn;
+
     public event Action? Moved;
 
     public PagesView(ReaderModel model, PdfBook book, AppGraph graph)
@@ -73,6 +82,8 @@ internal sealed class PagesView : FrameworkElement
         _detached = true;
         _controller.Changed -= OnControllerChanged;
         ThemeManager.Changed -= InvalidateVisual;
+        _pendingTurn = null;
+        Animator?.Stop();
     }
 
     private void OnControllerChanged() => Dispatcher.BeginInvoke(Sync, DispatcherPriority.Normal);
@@ -158,6 +169,13 @@ internal sealed class PagesView : FrameworkElement
         _appliedToken = r.Token;
         SelfTest.Trace($"pages restore token={r.Token} target={page}/{fraction} landed={m.Page}/{m.Fraction} y={_docY}");
         _controller.OnRestoreApplied(r.Token, CurrentKey, m.Page, m.Fraction, m.Horizontal, m.AtEnd);
+        // The turn that asked for this restore slides the new page in (only if it's recent: a
+        // turn at either end never restores, and mustn't animate a later, unrelated jump).
+        if (_pendingTurn is { } turn && Environment.TickCount64 - turn.At < 1500 && Animator is not null)
+        {
+            Animator.Play(turn.Before, Snapshot(), turn.Forward);
+        }
+        _pendingTurn = null;
         Moved?.Invoke();
     }
 
@@ -268,17 +286,30 @@ internal sealed class PagesView : FrameworkElement
         return false;
     }
 
-    /// <summary>Next page; in a spread, the next pair.</summary>
+    /// <summary>Next page; in a spread, the next pair. Animated like a page turn.</summary>
     public void NextPage()
     {
         var p = _controller.State.PageIndex;
-        _controller.GoToPage(_spread is not null ? SpreadLayout.LeftPageOf(p) + 2 : p + 1);
+        TurnTo(_spread is not null ? SpreadLayout.LeftPageOf(p) + 2 : p + 1, forward: true);
     }
 
     public void PreviousPage()
     {
         var p = _controller.State.PageIndex;
-        _controller.GoToPage(_spread is not null ? SpreadLayout.LeftPageOf(p) - 2 : p - 1);
+        TurnTo(_spread is not null ? SpreadLayout.LeftPageOf(p) - 2 : p - 1, forward: false);
+    }
+
+    private void TurnTo(int page, bool forward)
+    {
+        var count = _book.PageSizes.Count;
+        if (count == 0) return;
+        var target = Math.Clamp(page, 0, count - 1);
+        // Nothing further that way (the last page, or already at the top of the first): no turn.
+        var (current, fraction, _, _) = MeasurePosition();
+        if (target == current && (forward || fraction <= 0.0001f)) return;
+        Animator?.FinishNow();
+        _pendingTurn = Animator is not null && _controller.State.Phase.IsReading && IsLoaded ? (Snapshot(), forward, Environment.TickCount64) : null;
+        _controller.GoToPage(target);
     }
 
     private Point? _dragFrom;
@@ -336,9 +367,20 @@ internal sealed class PagesView : FrameworkElement
 
     // Drawing
 
-    protected override void OnRender(DrawingContext dc)
+    protected override void OnRender(DrawingContext dc) => Draw(dc, request: true);
+
+    /// <summary>
+    /// The page background: the theme's, except White, where white pages need a soft grey around
+    /// them to show where they end.
+    /// </summary>
+    private static Color Backdrop => ThemeManager.Current == ReaderTheme.White
+        ? Color.FromRgb(0xEE, 0xEE, 0xF0)
+        : ThemeManager.ToColor(ThemeManager.Colors.Background);
+
+    /// <summary>Draws the visible pages; <paramref name="request"/> also asks for missing or blurry bitmaps.</summary>
+    private void Draw(DrawingContext dc, bool request)
     {
-        var bg = new SolidColorBrush(ThemeManager.ToColor(ThemeManager.Colors.Background));
+        var bg = new SolidColorBrush(Backdrop);
         bg.Freeze();
         dc.DrawRectangle(bg, null, new Rect(0, 0, ActualWidth, ActualHeight));
         if (_single is null && _spread is null) return;
@@ -357,14 +399,15 @@ internal sealed class PagesView : FrameworkElement
             if (_bitmaps.TryGetValue(index, out var cached))
             {
                 dc.DrawImage(cached.Bitmap, screen);
-                if (cached.Width < wantWidth * 0.8) Request(index, wantWidth);
+                if (request && cached.Width < wantWidth * 0.8) Request(index, wantWidth);
                 Touch(index);
             }
-            else
+            else if (request)
             {
                 Request(index, wantWidth);
             }
         }
+        if (!request) return;
         // Prefetch the page just below the window.
         foreach (var (index, rect) in VisiblePages(bottom, bottom + VisibleDocHeight * 0.5))
         {
@@ -430,13 +473,15 @@ internal sealed class PagesView : FrameworkElement
         }
     }
 
-    /// <summary>A picture of the view (self-test).</summary>
+    /// <summary>A picture of what the view shows now, drawn fresh (for the page-turn animation and the self-test).</summary>
     public BitmapSource Snapshot()
     {
         var dpi = VisualTreeHelper.GetDpi(this);
+        var visual = new DrawingVisual();
+        using (var dc = visual.RenderOpen()) Draw(dc, request: false);
         var rtb = new RenderTargetBitmap(Math.Max(1, (int)Math.Ceiling(ActualWidth * dpi.DpiScaleX)),
             Math.Max(1, (int)Math.Ceiling(ActualHeight * dpi.DpiScaleY)), dpi.PixelsPerInchX, dpi.PixelsPerInchY, PixelFormats.Pbgra32);
-        rtb.Render(this);
+        rtb.Render(visual);
         rtb.Freeze();
         return rtb;
     }

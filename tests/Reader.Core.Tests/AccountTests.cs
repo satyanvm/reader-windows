@@ -205,6 +205,10 @@ public class AccountTests
         Assert.Equal(1f, ReaderSettings.PreviousStep(ReaderSettings.TextSteps, 1.15f));
         Assert.Equal(1f, ReaderSettings.PreviousStep(ReaderSettings.ZoomSteps, 1f));
         Assert.Equal(4f, ReaderSettings.NextStep(ReaderSettings.ZoomSteps, 4f));
+        back.Theme = ReaderTheme.White;
+        back.Save();
+        Assert.Contains("\"White\"", File.ReadAllText(path));
+        Assert.Equal(ReaderTheme.White, ReaderSettings.Load(path).Theme);
     }
 
     [Fact]
@@ -213,7 +217,8 @@ public class AccountTests
         Assert.Equal(new ThemeColors(0x242427, 0xDCDCDE, 0x8A8A8E, true), ThemeColors.For(ReaderTheme.Dark));
         Assert.Equal(new ThemeColors(0xF5ECD9, 0x4A3A2A, 0x9C8B75, false), ThemeColors.For(ReaderTheme.Sepia));
         Assert.Equal(new ThemeColors(0x000000, 0xC4C4C4, 0x6E6E6E, true), ThemeColors.For(ReaderTheme.Black));
-        Assert.Equal(3, Enum.GetValues<ReaderTheme>().Length);
+        Assert.Equal(new ThemeColors(0xFFFFFF, 0x1C1C1E, 0x86868B, false), ThemeColors.For(ReaderTheme.White));
+        Assert.Equal(4, Enum.GetValues<ReaderTheme>().Length);
     }
 
     [Fact]

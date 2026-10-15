@@ -94,7 +94,7 @@ internal sealed class FlowView : FrameworkElement
         ThemeManager.Changed -= Sync;
         _source.OnUnitsLoaded = null;
         _flushTimer.Stop();
-        Animator?.FinishNow();
+        Animator?.Stop();
         _measurer?.Dispose();
         _measurer = null;
     }
@@ -235,7 +235,10 @@ internal sealed class FlowView : FrameworkElement
 
     // Loading pages (PDF flowing text)
 
-    /// <summary>Replaces placeholders with real text. Positions are anchored per unit, so nothing the reader sees moves.</summary>
+    /// <summary>
+    /// Replaces placeholders with real text. Positions are anchored per unit, so nothing the reader
+    /// sees moves. Text arriving on the page in view dissolves in rather than popping.
+    /// </summary>
     private void FlushPendingUnits()
     {
         if (_layout is null || _measurer is null || _pendingUnits.Count == 0)
@@ -243,6 +246,7 @@ internal sealed class FlowView : FrameworkElement
             _pendingUnits.Clear();
             return;
         }
+        var before = Animator is { IsAnimating: false } && IsLoaded && IsActive && _pendingUnits.Overlaps(VisibleUnits()) ? Snapshot() : null;
         var top = _layout.UnitFraction(Top).Unit;
         var topChanged = false;
         foreach (var u in _pendingUnits)
@@ -260,7 +264,27 @@ internal sealed class FlowView : FrameworkElement
             Place(_layout.PosOf(unit, within));
         }
         InvalidateVisual();
+        if (before is not null) Animator!.FadeFrom(before);
         Moved?.Invoke();
+    }
+
+    /// <summary>The units with at least one line on screen now.</summary>
+    private HashSet<int> VisibleUnits()
+    {
+        var units = new HashSet<int>();
+        if (_layout is null) return units;
+        if (Paged && _pager is not null)
+        {
+            foreach (var slice in _pager.Pages())
+            {
+                foreach (var line in _layout.LinesFrom(slice.Start, slice.VisibleHeight)) units.Add(line.Unit);
+            }
+        }
+        else
+        {
+            foreach (var line in _layout.LinesFrom(_anchor, ActualHeight)) units.Add(line.Unit);
+        }
+        return units;
     }
 
     // Navigation
