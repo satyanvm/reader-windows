@@ -48,7 +48,7 @@ if (-not ($lines | Where-Object { $_.what -eq "done" })) { $problems += "the sel
 
 $lines | Where-Object { $_.PSObject.Properties.Name -notcontains "trace" } | ForEach-Object { $_ | ConvertTo-Json -Compress } | Write-Host
 if ($problems.Count -gt 0) {
-    $problems | ForEach-Object { Write-Host "::error::$Name: $_" }
+    $problems | ForEach-Object { Write-Host "::error::${Name}: $_" }
     exit 1
 }
 Write-Host "$Name self-test passed: $((Get-ChildItem (Join-Path $dir 'png') -Filter *.png).Count) snapshots"

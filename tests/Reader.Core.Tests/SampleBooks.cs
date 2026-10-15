@@ -34,7 +34,7 @@ public class SampleBooks
         var pages = Enumerable.Range(1, 60).Select(n =>
             (IEnumerable<PdfText>)Pdfs.BookPage(n,
                 Sentences.Select((s, i) => i == 0 ? $"{n}. {s}" : s).ToArray(),
-                Sentences.Reverse().ToArray(),
+                Enumerable.Reverse(Sentences).ToArray(),
                 Sentences.Take(4).ToArray()));
         Pdfs.Make(pages, Path.Combine(dir, "sample.pdf"), title: "The Sample Meditations");
 
