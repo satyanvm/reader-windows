@@ -163,6 +163,28 @@ public class WpfTests
         host.Close();
     });
 
+    [Fact]
+    public void ADissolveFadesOutAndATurnEndsIt() => Sta(() =>
+    {
+        var (host, flow, _) = OpenFlow(twoPages: false);
+        var animator = new PageTurnAnimator(host.Overlay) { ReduceMotionOverride = false };
+        flow.Animator = animator;
+        animator.FadeFrom(flow.Snapshot());
+        Assert.True(animator.IsDissolving);
+        Assert.Single(host.Overlay.Children);
+        Assert.True(PumpUntil(() => !animator.IsDissolving, 1000), "the dissolve is removed");
+        Assert.Empty(host.Overlay.Children);
+
+        // A turn during a dissolve ends it; ending the turn leaves nothing behind.
+        animator.FadeFrom(flow.Snapshot());
+        Assert.True(flow.Turn(true));
+        Assert.False(animator.IsDissolving);
+        Assert.Equal(2, host.Overlay.Children.Count);
+        Assert.True(PumpUntil(() => !animator.IsAnimating, 2000));
+        Assert.Empty(host.Overlay.Children);
+        host.Close();
+    });
+
     /// <summary>A window holding the view and the overlay canvas, the way ReaderView arranges them.</summary>
     private sealed class MainWindowHost
     {

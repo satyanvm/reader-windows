@@ -31,20 +31,30 @@ internal sealed class CubicBezierEase : EasingFunctionBase
 ///    "Show animations" is off.
 /// A new turn during an animation finishes the current one at once, and a timer always removes
 /// the overlay, so it can never get stuck.
+///
+/// It also dissolves the view from a picture of what was there before (<see cref="FadeFrom"/>), so
+/// text that arrives, a new text size, a theme, one or two pages, or the other reading mode comes
+/// in smoothly instead of popping. A turn ends a running dissolve.
 /// </summary>
 internal sealed class PageTurnAnimator
 {
     public static readonly TimeSpan TurnDuration = TimeSpan.FromSeconds(0.38);
     public static readonly TimeSpan FadeDuration = TimeSpan.FromSeconds(0.2);
+    public static readonly TimeSpan DissolveDuration = TimeSpan.FromSeconds(0.26);
     private const double Drift = 0.3;
     private const double Dim = 0.18;
     private const double ShadowWidth = 28;
 
     private readonly Canvas _overlay;
     private readonly DispatcherTimer _fallback;
+    private readonly DispatcherTimer _dissolveFallback;
+    private readonly List<UIElement> _turn = new();
+    private UIElement? _dissolve;
     private int _generation;
+    private int _dissolveGeneration;
 
     public bool IsAnimating { get; private set; }
+    public bool IsDissolving => _dissolve is not null;
 
     /// <summary>For tests and the self-test: animations on or off, regardless of the system setting.</summary>
     public bool? ReduceMotionOverride { get; set; }
@@ -56,6 +66,8 @@ internal sealed class PageTurnAnimator
         _overlay.ClipToBounds = true;
         _fallback = new DispatcherTimer(DispatcherPriority.Normal, overlay.Dispatcher);
         _fallback.Tick += (_, _) => FinishNow();
+        _dissolveFallback = new DispatcherTimer(DispatcherPriority.Normal, overlay.Dispatcher);
+        _dissolveFallback.Tick += (_, _) => FinishDissolve();
     }
 
     private bool ReduceMotion => ReduceMotionOverride ?? !SystemParameters.ClientAreaAnimation;
@@ -63,6 +75,7 @@ internal sealed class PageTurnAnimator
     public void Play(BitmapSource oldPage, BitmapSource newPage, bool forward)
     {
         FinishNow();
+        FinishDissolve();
         var w = _overlay.ActualWidth;
         var h = _overlay.ActualHeight;
         if (w <= 0 || h <= 0) return;
@@ -87,8 +100,8 @@ internal sealed class PageTurnAnimator
             var under = Picture(oldPage);
             var over = Picture(newPage);
             over.Opacity = 0;
-            _overlay.Children.Add(under);
-            _overlay.Children.Add(over);
+            AddTurn(under);
+            AddTurn(over);
             var fade = new DoubleAnimation(0, 1, duration) { FillBehavior = FillBehavior.HoldEnd };
             fade.Completed += (_, _) => Done(generation);
             over.BeginAnimation(UIElement.OpacityProperty, fade);
@@ -117,8 +130,8 @@ internal sealed class PageTurnAnimator
         var topMove = new TranslateTransform(forward ? w : 0, 0);
         top.RenderTransform = topMove;
 
-        _overlay.Children.Add(bottom);
-        _overlay.Children.Add(top);
+        AddTurn(bottom);
+        AddTurn(top);
 
         DoubleAnimation Anim(double from, double to) => new(from, to, duration)
         {
@@ -132,6 +145,12 @@ internal sealed class PageTurnAnimator
         dim.BeginAnimation(UIElement.OpacityProperty, Anim(forward ? 0 : Dim, forward ? Dim : 0));
     }
 
+    private void AddTurn(UIElement e)
+    {
+        _turn.Add(e);
+        _overlay.Children.Add(e);
+    }
+
     private void Done(int generation)
     {
         if (generation == _generation) FinishNow();
@@ -141,7 +160,50 @@ internal sealed class PageTurnAnimator
     public void FinishNow()
     {
         _fallback.Stop();
-        if (_overlay.Children.Count > 0) _overlay.Children.Clear();
+        foreach (var e in _turn) _overlay.Children.Remove(e);
+        _turn.Clear();
         IsAnimating = false;
+    }
+
+    /// <summary>
+    /// Covers the live view with <paramref name="before"/> (a picture of it a moment ago) and fades
+    /// that out, so whatever the view draws next comes in as a soft dissolve. Doesn't stop a running
+    /// turn; a turn started meanwhile ends it.
+    /// </summary>
+    public void FadeFrom(BitmapSource before, TimeSpan? duration = null)
+    {
+        FinishDissolve();
+        var w = _overlay.ActualWidth;
+        var h = _overlay.ActualHeight;
+        if (w <= 0 || h <= 0) return;
+        var generation = ++_dissolveGeneration;
+        var length = duration ?? DissolveDuration;
+        var picture = new Image { Source = before, Width = w, Height = h, Stretch = Stretch.Fill, SnapsToDevicePixels = true };
+        _dissolve = picture;
+        // Below any turn, so a turn always shows on top.
+        _overlay.Children.Insert(0, picture);
+        _dissolveFallback.Interval = length + TimeSpan.FromMilliseconds(250);
+        _dissolveFallback.Start();
+        var fade = new DoubleAnimation(1, 0, length) { EasingFunction = new CubicBezierEase(), FillBehavior = FillBehavior.HoldEnd };
+        fade.Completed += (_, _) =>
+        {
+            if (generation == _dissolveGeneration) FinishDissolve();
+        };
+        picture.BeginAnimation(UIElement.OpacityProperty, fade);
+    }
+
+    /// <summary>Ends a running dissolve now.</summary>
+    public void FinishDissolve()
+    {
+        _dissolveFallback.Stop();
+        if (_dissolve is not null) _overlay.Children.Remove(_dissolve);
+        _dissolve = null;
+    }
+
+    /// <summary>Ends everything (closing the book).</summary>
+    public void Stop()
+    {
+        FinishNow();
+        FinishDissolve();
     }
 }

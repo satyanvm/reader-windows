@@ -36,8 +36,8 @@ internal static class ThemeManager
         Set("HoverBrush", Color.FromArgb(0x16, fg.R, fg.G, fg.B));
         Set("PressedBrush", Color.FromArgb(0x28, fg.R, fg.G, fg.B));
         Set("SelectedBrush", Color.FromArgb(0x2E, fg.R, fg.G, fg.B));
-        Set("PillBrush", c.IsDark ? Color.FromArgb(0xF2, 0x38, 0x38, 0x3C) : Color.FromArgb(0xF5, 0xFF, 0xFB, 0xF3));
-        Set("AccentBrush", c.IsDark ? Color.FromRgb(0xD9, 0xA4, 0x65) : Color.FromRgb(0x8A, 0x5A, 0x2B));
+        Set("PillBrush", c.IsDark ? Color.FromArgb(0xF2, 0x38, 0x38, 0x3C) : theme == ReaderTheme.White ? Color.FromArgb(0xF5, 0xF4, 0xF4, 0xF6) : Color.FromArgb(0xF5, 0xFF, 0xFB, 0xF3));
+        Set("AccentBrush", c.IsDark ? Color.FromRgb(0xD9, 0xA4, 0x65) : theme == ReaderTheme.White ? Color.FromRgb(0x2F, 0x6B, 0xB0) : Color.FromRgb(0x8A, 0x5A, 0x2B));
         Set("ErrorBrush", c.IsDark ? Color.FromRgb(0xFF, 0x8A, 0x80) : Color.FromRgb(0xB3, 0x26, 0x1E));
         foreach (Window w in Application.Current.Windows) ApplyChrome(w);
         Changed?.Invoke();
