@@ -27,19 +27,13 @@ jobs:
         with:
           repository: satyanvm/reader-android
           path: reader-android
-      - name: Start the sync server
-        shell: pwsh
-        working-directory: reader-android/server
-        run: |
-          npm install --no-audit --no-fund
-          $env:READER_DB = "$env:RUNNER_TEMP\sync.sqlite"
-          Start-Process -FilePath node -ArgumentList "--disable-warning=ExperimentalWarning","bin/server.js" -RedirectStandardOutput "$env:RUNNER_TEMP\server.log" -RedirectStandardError "$env:RUNNER_TEMP\server.err"
-          for ($i = 0; $i -lt 30; $i++) { try { Invoke-RestMethod http://127.0.0.1:8787/healthz | Out-Null; break } catch { Start-Sleep 1 } }
       - name: Test
         shell: pwsh
         env:
           READER_E2E_SERVER: http://127.0.0.1:8787
-        run: dotnet test -c Release --logger "trx;LogFileName=results.trx" --logger "console;verbosity=normal"
+        run: |
+          scripts/start-sync-server.ps1
+          dotnet test -c Release --logger "trx;LogFileName=results.trx" --logger "console;verbosity=normal"
       - name: Upload test results and snapshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -48,7 +42,7 @@ jobs:
           path: |
             tests/**/TestResults/*.trx
             ${{ runner.temp }}/reader-wpf-tests/*.png
-            ${{ runner.temp }}/server.log
+            ${{ runner.temp }}/reader-sync-server.log*
           if-no-files-found: warn
 
   selftest:
@@ -67,14 +61,6 @@ jobs:
         with:
           repository: satyanvm/reader-android
           path: reader-android
-      - name: Start the sync server
-        shell: pwsh
-        working-directory: reader-android/server
-        run: |
-          npm install --no-audit --no-fund
-          $env:READER_DB = "$env:RUNNER_TEMP\sync.sqlite"
-          Start-Process -FilePath node -ArgumentList "--disable-warning=ExperimentalWarning","bin/server.js" -RedirectStandardOutput "$env:RUNNER_TEMP\server.log" -RedirectStandardError "$env:RUNNER_TEMP\server.err"
-          for ($i = 0; $i -lt 30; $i++) { try { Invoke-RestMethod http://127.0.0.1:8787/healthz | Out-Null; break } catch { Start-Sleep 1 } }
       - name: Build
         run: dotnet build src/Reader.App -c Release
       - name: Make sample books
@@ -82,13 +68,14 @@ jobs:
         env:
           READER_SAMPLE_OUT: ${{ github.workspace }}\samples
         run: dotnet test tests/Reader.Core.Tests -c Release --filter "FullyQualifiedName~SampleBooks"
-      - name: Self-test with an EPUB (signed in to the local server)
+      - name: Self-test with an EPUB (signed in to the local server) and a PDF
         shell: pwsh
-        run: scripts/selftest.ps1 -Book samples/sample.epub -Name epub -Server http://127.0.0.1:8787
-      - name: Self-test with a PDF
-        if: always()
-        shell: pwsh
-        run: scripts/selftest.ps1 -Book samples/sample.pdf -Name pdf
+        run: |
+          scripts/start-sync-server.ps1
+          $failed = 0
+          scripts/selftest.ps1 -Book samples/sample.epub -Name epub -Server http://127.0.0.1:8787; if ($LASTEXITCODE) { $failed++ }
+          scripts/selftest.ps1 -Book samples/sample.pdf -Name pdf; if ($LASTEXITCODE) { $failed++ }
+          exit $failed
       - name: Upload self-test logs and snapshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -98,7 +85,7 @@ jobs:
             selftest-out/*/selftest.jsonl
             selftest-out/*/png/*.png
             selftest-out/*/library/logs/*
-            ${{ runner.temp }}/server.log
+            ${{ runner.temp }}/reader-sync-server.log*
           if-no-files-found: warn
 
   publish:
